@@ -1,14 +1,14 @@
 #include "text-memory.h"
 
 int main() {
-  char filename[64];
-  char *myfifo = "/tmp/myfifo"; // named pipe path
-
-  mkfifo(myfifo, 0666); // creating named pipe with 0666 permission
 
   sem_unlink(S_SEM);
   sem_unlink(C_SEM);
   while (1) {
+    char filename[64];
+    char *myfifo = "/tmp/myfifo"; // named pipe path
+
+    mkfifo(myfifo, 0666); // creating named pipe with 0666 permission
 
     sem_t *server = sem_open(S_SEM, O_CREAT, 0666, 0);
     sem_t *client = sem_open(C_SEM, O_CREAT, 0666, 1);
@@ -35,12 +35,14 @@ int main() {
 
         sem_post(server);
       }
+      pclose(fp);
+
       sem_wait(client);
       memset(k, EOT, BLOCK_SIZE);
       sem_post(server);
       printf("\nBYTES SENT: %d\n", i);
-      pclose(fp);
     }
+    //detach_segment(filename);
     close(fd);
     sem_unlink(S_SEM);
     sem_unlink(C_SEM);

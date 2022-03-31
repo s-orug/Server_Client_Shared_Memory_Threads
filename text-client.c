@@ -31,8 +31,8 @@ int main(int argc, char *argv[]) {
   }
   fprintf(stdout, "\nBYTES RECEVIED: %d\n", i);
 
+  //detach_segment(argv[1]);
   close(fd);
-  destroy_segment(argv[1]);
 
   return 0;
 }
