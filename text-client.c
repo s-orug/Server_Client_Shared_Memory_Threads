@@ -2,8 +2,6 @@
 
 int main(int argc, char *argv[]) {
 
-  pthread_t threads[THREADS];
-
   char *myfifo = "/tmp/myfifo";
 
   mkfifo(myfifo, 0666);
@@ -20,9 +18,11 @@ int main(int argc, char *argv[]) {
     sem_wait(server);
 
     if (strlen(k) > 0) {
-      if (k[0] == EOT)
+      if (k[0] == EOT) {
         break;
+      }
       i += strlen(k);
+      // if (word_checker(k, argv[2]))
       printf("%d\t%s", iter, k);
       iter++;
     }
@@ -32,14 +32,7 @@ int main(int argc, char *argv[]) {
   fprintf(stdout, "\nBYTES RECEVIED: %d\n", i);
 
   close(fd);
-
-  sem_close(server);
-  sem_close(client);
-
   destroy_segment(argv[1]);
+
   return 0;
 }
-
-// anna_karenina.txt 1985015
-// lorem_ipsum.txt 578
-// dante.txt 222472
