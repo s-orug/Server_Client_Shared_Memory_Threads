@@ -1,10 +1,17 @@
-text: text-client text-server
+CC=gcc
+SERVER=text-server
+CLIENT=text-client
+
+text: $(SERVER) $(CLIENT)
 
 text-client:
-	gcc -o text-client text-client.c
+	$(CC) -o $(CLIENT) $(CLIENT).c
 
 text-server:
-	gcc -o text-server text-server.c
+	$(CC) -o $(SERVER) $(SERVER).c
 
 clean:
-	rm -rf text-client text-server *.o
+	rm -rf $(CLIENT) $(SERVER) server client *.o
+
+tmp:
+	$(CC) -o server server.c && gcc -o client client.c
