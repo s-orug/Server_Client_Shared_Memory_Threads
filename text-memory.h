@@ -80,7 +80,6 @@ bool detach_segment(char filename[]) {
 
 bool destroy_segment(char filename[]) {
   int shmid = create_segment(filename);
-  detach_segment(filename);
   return (shmctl(shmid, IPC_RMID, NULL) != ERROR);
 }
 

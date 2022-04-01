@@ -5,6 +5,7 @@ void *thread(void *arg) {
   struct send *iptr = (struct send *)arg;
   int i = 0;
   if (word_checker(iptr->line, iptr->text)) {
+    fprintf(stdout, "%d\t%s", iptr->iter, iptr->line);
     return (void *)true;
   }
   return (void *)false;
@@ -28,6 +29,7 @@ int main(int argc, char *argv[]) {
   while (true) {
     for (int j = 0; j < 4; j++) {
       sem_wait(server);
+
       void *ret_val;
       if (strlen(k) > 0) {
         if (k[0] == EOT) {
@@ -37,6 +39,8 @@ int main(int argc, char *argv[]) {
         send vals;
         strncpy(vals.line, k, sizeof(vals.line));
         strncpy(vals.text, argv[2], sizeof(vals.text));
+        vals.iter = iter;
+        vals.i = i;
         if (pthread_create(&threads[i], NULL, thread, &vals) != 0) {
           perror("thread failed to create\n");
         }
@@ -44,7 +48,6 @@ int main(int argc, char *argv[]) {
           perror("failed to join\n");
         }
         if ((bool)ret_val == true) {
-          printf("%d\t%s", iter, k);
           iter++;
           i += strlen(k);
         }
@@ -56,8 +59,12 @@ int main(int argc, char *argv[]) {
       break;
     }
   }
+  detach_segment(argv[1]);
 
   close(fd);
+
+  sem_unlink(S_SEM);
+  sem_unlink(C_SEM);
 
   sem_close(server);
   sem_close(client);
