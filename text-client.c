@@ -13,6 +13,11 @@ void *thread(void *arg) {
 
 int main(int argc, char *argv[]) {
 
+  if (strlen(argv[2]) == 0) {
+    fprintf(stderr, "INVALID TEXT");
+    exit(ERROR);
+  }
+
   char *myfifo = "/tmp/myfifo";
 
   mkfifo(myfifo, 0666);
@@ -22,6 +27,15 @@ int main(int argc, char *argv[]) {
 
   int fd = open(myfifo, O_WRONLY);
   write(fd, argv[1], strlen(argv[1]));
+
+  if (file_checker(argv[1]) == 0) {
+    fprintf(stderr, "INVALID FILE\n");
+    sem_close(server);
+    sem_close(client);
+    close(fd);
+    exit(ERROR);
+  }
+
   char *k = attach_segment(argv[1]);
 
   int i = 0, iter = 1;
@@ -59,7 +73,6 @@ int main(int argc, char *argv[]) {
       break;
     }
   }
-  detach_segment(argv[1]);
 
   close(fd);
 
