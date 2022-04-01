@@ -42,7 +42,7 @@ int main() {
       sem_post(server);
       printf("\nBYTES SENT: %d\n", i);
     }
-    //detach_segment(filename);
+    // detach_segment(filename);
     close(fd);
     sem_unlink(S_SEM);
     sem_unlink(C_SEM);

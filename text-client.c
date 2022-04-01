@@ -1,5 +1,15 @@
 #include "text-memory.h"
 
+void *thread(void *arg) {
+
+  struct send *iptr = (struct send *)arg;
+  int i = 0;
+  if (word_checker(iptr->line, iptr->text)) {
+    return (void *)true;
+  }
+  return (void *)false;
+}
+
 int main(int argc, char *argv[]) {
 
   char *myfifo = "/tmp/myfifo";
@@ -14,25 +24,43 @@ int main(int argc, char *argv[]) {
   char *k = attach_segment(argv[1]);
 
   int i = 0, iter = 1;
+  pthread_t threads[4];
   while (true) {
-    sem_wait(server);
-
-    if (strlen(k) > 0) {
-      if (k[0] == EOT) {
-        break;
+    for (int j = 0; j < 4; j++) {
+      sem_wait(server);
+      void *ret_val;
+      if (strlen(k) > 0) {
+        if (k[0] == EOT) {
+          fprintf(stdout, "\nBYTES RECEVIED: %d\n", i);
+          break;
+        }
+        send vals;
+        strncpy(vals.line, k, sizeof(vals.line));
+        strncpy(vals.text, argv[2], sizeof(vals.text));
+        if (pthread_create(&threads[i], NULL, thread, &vals) != 0) {
+          perror("thread failed to create\n");
+        }
+        if (pthread_join(threads[i], &ret_val) != 0) {
+          perror("failed to join\n");
+        }
+        if ((bool)ret_val == true) {
+          printf("%d\t%s", iter, k);
+          iter++;
+          i += strlen(k);
+        }
       }
-      i += strlen(k);
-      // if (word_checker(k, argv[2]))
-      printf("%d\t%s", iter, k);
-      iter++;
+
+      sem_post(client);
     }
-
-    sem_post(client);
+    if (k[0] == EOT) {
+      break;
+    }
   }
-  fprintf(stdout, "\nBYTES RECEVIED: %d\n", i);
 
-  //detach_segment(argv[1]);
   close(fd);
+
+  sem_close(server);
+  sem_close(client);
 
   return 0;
 }

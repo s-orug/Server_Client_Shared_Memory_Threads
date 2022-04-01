@@ -6,6 +6,7 @@
     "string.h": "c",
     "unistd.h": "c",
     "text-memory.h": "c",
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "semaphore.h": "c"
   }
 }
