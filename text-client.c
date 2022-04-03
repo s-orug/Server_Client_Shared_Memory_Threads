@@ -23,6 +23,16 @@ int main(int argc, char *argv[]) {
   int fd = open(myfifo, O_WRONLY);
   write(fd, filename, sizeof(filename));
 
+  if (file_checker(argv[1]) == false) {
+    fprintf(stderr, "INVALID FILE\n");
+    exit(ERROR);
+  }
+
+  if (strlen(argv[2]) == 0) {
+    fprintf(stderr, "INVALID TEXT\n");
+    exit(ERROR);
+  }
+
   char *memory = attach_segment(filename);
   memset(memory, '\0', BLOCK_SIZE);
 

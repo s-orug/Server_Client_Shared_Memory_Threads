@@ -14,8 +14,12 @@ int main() {
     memset(filename, '\0', sizeof(filename));
 
     if (read(fd, filename, sizeof(filename))) {
-
       fprintf(stderr, "CLIENT REQUEST RECEIVED");
+
+      if (file_checker(filename) == false) {
+        fprintf(stderr, "\tINVALID FILE\n");
+        continue;
+      }
 
       char *memory = attach_segment(filename);
       fprintf(stderr, "\tMEMORY OPEN");
