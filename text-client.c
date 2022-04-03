@@ -1,86 +1,71 @@
 #include "text-memory.h"
+pthread_mutex_t mutex;
 
 void *thread(void *arg) {
 
   struct send *iptr = (struct send *)arg;
-  int i = 0;
+
+  pthread_mutex_lock(&mutex);
   if (word_checker(iptr->line, iptr->text)) {
-    fprintf(stdout, "%d\t%s", iptr->iter, iptr->line);
+    pthread_mutex_unlock(&mutex);
     return (void *)true;
   }
+  pthread_mutex_unlock(&mutex);
   return (void *)false;
 }
 
 int main(int argc, char *argv[]) {
 
-  if (strlen(argv[2]) == 0) {
-    fprintf(stderr, "INVALID TEXT");
-    exit(ERROR);
-  }
-
-  char *myfifo = "/tmp/myfifo";
-
+  char *myfifo = "/tmp/myfifo", filename[64];
   mkfifo(myfifo, 0666);
 
-  sem_t *server = sem_open(S_SEM, 0);
-  sem_t *client = sem_open(C_SEM, 1);
-
+  strcpy(filename, argv[1]);
   int fd = open(myfifo, O_WRONLY);
-  write(fd, argv[1], strlen(argv[1]));
+  write(fd, filename, sizeof(filename));
 
-  if (file_checker(argv[1]) == 0) {
-    fprintf(stderr, "INVALID FILE\n");
-    sem_close(server);
-    sem_close(client);
-    close(fd);
-    exit(ERROR);
-  }
+  char *memory = attach_segment(filename);
+  memset(memory, '\0', BLOCK_SIZE);
 
-  char *k = attach_segment(argv[1]);
-
-  int i = 0, iter = 1;
-  pthread_t threads[4];
-  while (true) {
-    for (int j = 0; j < 4; j++) {
-      sem_wait(server);
-
-      void *ret_val;
-      if (strlen(k) > 0) {
-        if (k[0] == EOT) {
-          fprintf(stdout, "\nBYTES RECEVIED: %d\n", i);
-          break;
-        }
-        send vals;
-        strncpy(vals.line, k, sizeof(vals.line));
-        strncpy(vals.text, argv[2], sizeof(vals.text));
-        vals.iter = iter;
-        vals.i = i;
-        if (pthread_create(&threads[i], NULL, thread, &vals) != 0) {
-          perror("thread failed to create\n");
-        }
-        if (pthread_join(threads[i], &ret_val) != 0) {
-          perror("failed to join\n");
-        }
-        if ((bool)ret_val == true) {
-          iter++;
-          i += strlen(k);
-        }
-      }
-
-      sem_post(client);
-    }
-    if (k[0] == EOT) {
-      break;
-    }
+  while (memory[sizeof(memory)] != EOT) {
+    /* Waits */
   }
 
   close(fd);
 
-  sem_unlink(S_SEM);
-  sem_unlink(C_SEM);
+  char *memory_array[ARR_SIZE] = {NULL};
+  size_t n = 0;
 
-  sem_close(server);
-  sem_close(client);
+  for (char *p = strtok(memory, "\n"); n < ARR_SIZE && p;
+       p = strtok(NULL, "\n")) {
+    memory_array[n++] = p;
+  }
+
+  pthread_t threads[THREADS];
+  pthread_mutex_init(&mutex, NULL);
+  void *ret_val;
+
+  int iter = 1, l = 0;
+  for (int i = 0; i < n; i++) {
+    struct send vals;
+    strcpy(vals.line, memory_array[i]);
+    strcpy(vals.text, argv[2]);
+
+    if (pthread_create(&threads[i % THREADS], NULL, thread, &vals) != 0) {
+      perror("thread failed to create\n");
+    }
+    if (pthread_join(threads[i % THREADS], &ret_val) != 0) {
+      perror("failed to join\n");
+    }
+    if ((bool)ret_val == true) {
+      l += strlen(vals.line) + 1;
+      fprintf(stdout, "%d\t%s\n", iter, vals.line);
+      iter++;
+    }
+  }
+  fprintf(stderr, "\nBYTES RECEIVED: %d \n", l);
+
+  pthread_mutex_destroy(&mutex);
+  destroy_segment(filename);
 
   return 0;
 }

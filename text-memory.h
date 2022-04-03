@@ -12,8 +12,11 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <math.h>
 
-#define BLOCK_SIZE 4096
+#define BLOCK_SIZE 2000000
+#define ARR_SIZE 1000000
+
 #define ERROR (-1)
 #define EOT (0x04)
 #define ACK (0x06)
@@ -33,8 +36,7 @@
 typedef struct send {
   char line[2048];
   char text[64];
-  int i, iter;
-}send ;
+} send;
 
 bool file_checker(char filename[]) { // used to check if a file can be opened
   FILE *f;

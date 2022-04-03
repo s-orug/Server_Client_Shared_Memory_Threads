@@ -1,79 +1,47 @@
 #include "text-memory.h"
 
-volatile sig_atomic_t stop;
-
 int main() {
 
-  sem_unlink(S_SEM);
-  sem_unlink(C_SEM);
   fprintf(stdout, "SERVER STARTED");
+
   while (1) {
     char filename[64];
     char *myfifo = "/tmp/myfifo"; // named pipe path
 
-    mkfifo(myfifo, 0666); // creating named pipe with 0666 permission
-
-    sem_t *server = sem_open(S_SEM, O_CREAT, 0666, 0);
-    sem_t *client = sem_open(C_SEM, O_CREAT, 0666, 1);
-
-    void sig_handler(int signum) {
-      sem_unlink(S_SEM);
-      sem_unlink(C_SEM);
-
-      sem_close(server);
-      sem_close(client);
-      exit(0);
-    }
-    signal(SIGINT, sig_handler);
-    // if(stop == 1) continue;
+    mkfifo(myfifo, 0666);            // creating named pipe with 0666 permission
     int fd = open(myfifo, O_RDONLY); // opens the pipe read only
 
     memset(filename, '\0', sizeof(filename));
 
-    int i = 0, iter = 1;
-    if (read(fd, filename, sizeof(filename)) > 0 &
-        (file_checker(filename) != 0)) {
-      fprintf(stderr, "CLIENT REQUEST RECEIVED\n");
-      char *k = attach_segment(filename), line[2048];
-      fprintf(stderr, "\tMEMORY OPEN\n");
+    if (read(fd, filename, sizeof(filename))) {
+
+      fprintf(stderr, "CLIENT REQUEST RECEIVED");
+
+      char *memory = attach_segment(filename);
+      fprintf(stderr, "\tMEMORY OPEN");
+      memset(memory, '\0', BLOCK_SIZE);
 
       FILE *fp;
-
       fp = fopen(filename, "r");
-      fprintf(stderr, "\tOPENING: %s\n", filename);
+      fprintf(stderr, "\tOPENING: %s", filename);
 
-      while (fgets(line, sizeof(line) - 1, fp) != NULL) {
-        sem_wait(client);
-        strncpy(k, line, BLOCK_SIZE);
-        i += strlen(k);
-        printf("%d\t%s", iter, k);
-        iter++;
-
-        sem_post(server);
+      if (fp != NULL) {
+        size_t length = fread(memory, sizeof(char), BLOCK_SIZE, fp);
+        if (ferror(fp) != 0) {
+          perror("Error in reading");
+        } else {
+          memory[length++] = '\0';
+        }
       }
-      pclose(fp);
-      fprintf(stderr, "\tFILE CLOSED\n");
+      memory[sizeof(memory)] = EOT;
+      fclose(fp);
 
-      sem_wait(client);
-      memset(k, EOT, BLOCK_SIZE);
-      sem_post(server);
-
+      fprintf(stderr, "\tFILE CLOSED");
       detach_segment(filename);
-      destroy_segment(filename);
       fprintf(stderr, "\tMEMORY CLOSED\n");
     }
-    else{
-      fprintf(stderr,"INVALID FILE\n");
-    }
-    
-    // MEMORY CLOSING PROBLEM
     close(fd);
-
-    sem_unlink(S_SEM);
-    sem_unlink(C_SEM);
-
-    sem_close(server);
-    sem_close(client);
   }
+
   return 0;
 }
