@@ -85,7 +85,3 @@ bool destroy_segment(char filename[]) {
 }
 
 bool word_checker(char line[], char word[]) { return strstr(line, word); }
-
-void logg(char text[]) { fprintf(stderr, "%s", text); }
-
-void out(char text[]) { fprintf(stdout, "%s", text); }

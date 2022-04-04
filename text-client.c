@@ -34,7 +34,6 @@ int main(int argc, char *argv[]) {
   }
 
   char *memory = attach_segment(filename);
-  memset(memory, '\0', BLOCK_SIZE);
 
   while (memory[sizeof(memory)] != EOT) {
     /* Waits */
@@ -72,7 +71,6 @@ int main(int argc, char *argv[]) {
       iter++;
     }
   }
-  fprintf(stderr, "\nBYTES RECEIVED: %d \n", l);
 
   pthread_mutex_destroy(&mutex);
   destroy_segment(filename);

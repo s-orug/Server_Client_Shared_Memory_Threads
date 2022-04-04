@@ -1,10 +1,11 @@
 #include "text-memory.h"
 
 int main() {
-
-  fprintf(stdout, "SERVER STARTED");
-
+  int k = 0;
   while (1) {
+    if (k == 0)
+      fprintf(stdout, "SERVER STARTED\n");
+    k = 1;
     char filename[64];
     char *myfifo = "/tmp/myfifo"; // named pipe path
 
