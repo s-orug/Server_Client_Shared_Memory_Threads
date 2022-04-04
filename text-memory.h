@@ -33,18 +33,13 @@
 // key->block (shmget) create_segment
 // block->ptr (shmat) attach_segment
 
-typedef struct send {
-  char line[2048];
-  char text[64];
-} send;
-
-bool file_checker(char filename[]) { // used to check if a file can be opened
+bool file_checker(char filename[]) {
   FILE *f;
   if (f = fopen(filename, "r")) {
     fclose(f);
-    return true; // returns true if it can open
+    return true;
   }
-  return false; // returns false if it can't open
+  return false;
 }
 
 key_t create_key(char filename[]) {
@@ -83,5 +78,3 @@ bool destroy_segment(char filename[]) {
   int shmid = create_segment(filename);
   return (shmctl(shmid, IPC_RMID, NULL) != ERROR);
 }
-
-bool word_checker(char line[], char word[]) { return strstr(line, word); }

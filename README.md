@@ -63,6 +63,5 @@ For this project, `text-memory.h` is created primarily to contain functions to h
 - `char *attach_segment(char filename[])` attaches the memory segment to the client on server.
 - `bool detach_segment(char filename[])` detached the memory segment from the process.
 - `bool destroy_segment(char filename[])` destroys the memory segment.
-- `bool word_checker(char line[], char word[])` takes in a line and a specific string to check if it exists in the line.
 
 Many of the functions listed above are helper functions. Although they are not used explicitly by the client or server, they are used by other functions to assist in shared memory.
